@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "submission_id": "7404e79a-4915-498f-9652-67bd2a6b91a7",
+      "mentee_id": "29b9ab1f-ef3e-4951-b8b2-fb495de836be",
+      "mentee_name": "sidharthh",
+      "task_id": "d4ff9fa0-2c35-449f-b9a6-2dcfbf12b7ba",
+      "question_title": "LRU Cache",
+      "solution_url": "http://localhost:3000/mentee",
+      "submission_status": "submitted",
+      "submitted_at": "2026-03-02T07:22:12+05:30"
+    },
+    {
+      "submission_id": "98947f74-2f44-40fb-916b-ea9277162f31",
+      "mentee_id": "c5468f88-9163-41c4-bad3-6fdbce83f586",
+      "mentee_name": "Alex (Mentee)",
+      "task_id": "10117b01-d0bb-454d-bbd4-4c710bf53368",
+      "question_title": "Two Sum",
+      "solution_url": "https://geelo/he",
+      "submission_status": "submitted",
+      "submitted_at": "2026-03-02T02:16:42+05:30"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+# =============================================================
+# MonkeyLMS — Full-Stack Docker Compose
+# =============================================================
+# Usage:
+#   1. cp .env.example .env  (and fill in secrets)
+#   2. docker compose up --build -d
+#   3. docker compose logs -f
+# =============================================================
+
+name: monkeylms
+
+services:
+  # -----------------------------------------------------------
+  # PostgreSQL Database
+  # -----------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: monkeylms_db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Auto-run schema on first boot (idempotent SQL only)
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    ports:
+      - "5433:5432" # host:container — keep 5433 for local psql access
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - monkeylms_net
+
+  # -----------------------------------------------------------
+  # Go Backend API
+  # -----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        # Pass build-time args if needed in the future
+        APP_ENV: production
+    container_name: monkeylms_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Override DATABASE_URL to point at the internal service name
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      PORT: ${BACKEND_PORT:-8080}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Note: distroless has no shell/wget — health check removed.
+    # Backend reliably starts within ~1s once DB is healthy.
+    networks:
+      - monkeylms_net
+
+  # -----------------------------------------------------------
+  # Next.js Frontend
+  # -----------------------------------------------------------
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # This URL is embedded at build time (NEXT_PUBLIC_ vars are static)
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    container_name: monkeylms_web
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - monkeylms_net
+
+# -----------------------------------------------------------
+# Named Volumes
+# -----------------------------------------------------------
+volumes:
+  pgdata:
+    name: monkeylms_pgdata
+
+# -----------------------------------------------------------
+# Networks
+# -----------------------------------------------------------
+networks:
+  monkeylms_net:
+    name: monkeylms_net
+    driver: bridge

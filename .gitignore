@@ -1,0 +1,25 @@
+# ============================================================
+# MonkeyLMS — Root .gitignore
+# ============================================================
+
+# Environment secrets — NEVER commit these
+.env
+.env.local
+.env.production
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts (Go)
+backend/*.exe
+backend/*.exe~
+backend/api
+backend/main
+
+# Docker volumes (if bind-mounted locally)
+pgdata/
