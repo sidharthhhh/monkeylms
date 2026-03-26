@@ -57,8 +57,8 @@ func (h *SubmissionHandler) CreateSubmission(w http.ResponseWriter, r *http.Requ
 	}
 	req.MenteeID = claims.UserID
 
-	if req.AssignmentTaskID == "" || req.SolutionURL == "" {
-		response.JSONError(w, http.StatusBadRequest, "VALIDATION_ERROR", "Task ID and Solution URL are required")
+	if req.AssignmentTaskID == "" {
+		response.JSONError(w, http.StatusBadRequest, "VALIDATION_ERROR", "Task ID is required")
 		return
 	}
 

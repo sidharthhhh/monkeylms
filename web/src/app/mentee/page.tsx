@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
     Calendar, CheckCircle2, Clock, AlertCircle, ChevronDown,
-    ChevronUp, BookOpen, Flame, Target, TrendingUp, Goal, Send,
+    ChevronUp, BookOpen, Flame, Target, TrendingUp, Goal, Send, Link as LinkIcon
 } from "lucide-react";
 import {
     Dialog,
@@ -60,6 +60,7 @@ export default function MenteeDashboard() {
     const [submittingTask, setSubmittingTask] = useState<Task | null>(null);
     const [solutionUrl, setSolutionUrl] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submittingTaskId, setSubmittingTaskId] = useState<string | null>(null);
 
     useEffect(() => {
         if (user?.id) loadAssignments();
@@ -121,6 +122,30 @@ export default function MenteeDashboard() {
         setSubmittingTask(task);
         setSolutionUrl("");
         setIsSubmitDialogOpen(true);
+    };
+
+    const handleDirectSubmit = async (task: Task) => {
+        try {
+            setSubmittingTaskId(task.task_id);
+            await fetchApi("/submissions", {
+                method: "POST",
+                body: JSON.stringify({
+                    assignment_task_id: task.task_id,
+                    solution_url: "", // Direct submission with no URL
+                }),
+            });
+
+            toast.success("Task completed!");
+
+            // Reload tasks for this assignment
+            await loadTasks(task.assignment_id);
+            // Reload assignments
+            await loadAssignments();
+        } catch (err) {
+            toast.error("Failed to submit task");
+        } finally {
+            setSubmittingTaskId(null);
+        }
     };
 
     const handleSubmitTask = async () => {
@@ -392,14 +417,35 @@ export default function MenteeDashboard() {
                                                                         </div>
 
                                                                         {t.task_status !== "completed" && (
-                                                                            <Button
-                                                                                size="sm"
-                                                                                className="h-8 px-3 text-xs bg-secondary/20 hover:bg-secondary/30 text-secondary-foreground border border-secondary/20 font-semibold"
-                                                                                onClick={(e) => openSubmitDialog(e, t)}
-                                                                            >
-                                                                                <Send className="h-3 w-3 mr-1.5" />
-                                                                                Submit
-                                                                            </Button>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="ghost"
+                                                                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-secondary hover:bg-secondary/10"
+                                                                                    onClick={(e) => openSubmitDialog(e, t)}
+                                                                                    title="Submit with link"
+                                                                                >
+                                                                                    <LinkIcon className="h-4 w-4" />
+                                                                                </Button>
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    disabled={submittingTaskId === t.task_id}
+                                                                                    className="h-8 px-3 text-xs bg-secondary/20 hover:bg-secondary/30 text-secondary-foreground border border-secondary/20 font-semibold"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleDirectSubmit(t);
+                                                                                    }}
+                                                                                >
+                                                                                    {submittingTaskId === t.task_id ? (
+                                                                                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                                                                    ) : (
+                                                                                        <>
+                                                                                            <Send className="h-3 w-3 mr-1.5" />
+                                                                                            Submit
+                                                                                        </>
+                                                                                    )}
+                                                                                </Button>
+                                                                            </div>
                                                                         )}
                                                                     </motion.div>
                                                                 ))}
@@ -423,16 +469,16 @@ export default function MenteeDashboard() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Send className="h-5 w-5 text-secondary" />
-                            Submit Task
+                            Submit with Link
                         </DialogTitle>
                         <DialogDescription>
-                            Submit your solution for <span className="text-foreground font-semibold">{submittingTask?.question_title}</span>.
+                            Provided an optional link for <span className="text-foreground font-semibold">{submittingTask?.question_title}</span>.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="solution_url" className="text-sm font-medium">
-                                Solution URL (GitHub, Gist, or Loom)
+                                Solution URL (Optional)
                             </Label>
                             <Input
                                 id="solution_url"
@@ -442,7 +488,7 @@ export default function MenteeDashboard() {
                                 className="bg-muted/30 border-border/50 focus:ring-secondary/50"
                             />
                             <p className="text-[10px] text-muted-foreground">
-                                Make sure the repository or link is publicly accessible.
+                                GitHub, Gist, or any public link to your work.
                             </p>
                         </div>
                     </div>
@@ -458,7 +504,7 @@ export default function MenteeDashboard() {
                         <Button
                             type="submit"
                             onClick={handleSubmitTask}
-                            disabled={!solutionUrl || isSubmitting}
+                            disabled={isSubmitting}
                             className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-lg shadow-secondary/20 min-w-[120px]"
                         >
                             {isSubmitting ? (

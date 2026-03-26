@@ -384,7 +384,7 @@ type Submission struct {
 	ID               pgtype.UUID          `json:"id"`
 	AssignmentTaskID pgtype.UUID          `json:"assignment_task_id"`
 	MenteeID         pgtype.UUID          `json:"mentee_id"`
-	SolutionUrl      string               `json:"solution_url"`
+	SolutionUrl      *string              `json:"solution_url"`
 	Status           NullSubmissionStatus `json:"status"`
 	SubmittedAt      pgtype.Timestamptz   `json:"submitted_at"`
 }

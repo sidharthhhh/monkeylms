@@ -50,9 +50,16 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 	}
 	req.CreatedBy = claims.UserID
 
-	if req.Title == "" || req.ContentMarkdown == "" || req.Difficulty == "" || req.Topic == "" {
-		response.JSONError(w, http.StatusBadRequest, "VALIDATION_ERROR", "All fields except external_link are required")
+	if req.Title == "" {
+		response.JSONError(w, http.StatusBadRequest, "VALIDATION_ERROR", "Title is required")
 		return
+	}
+
+	if req.Topic == "" {
+		req.Topic = "General"
+	}
+	if req.Difficulty == "" {
+		req.Difficulty = "medium"
 	}
 
 	res, err := h.questionService.CreateQuestion(r.Context(), req)

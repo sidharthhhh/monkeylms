@@ -104,14 +104,15 @@ const getRecentActivity = `-- name: GetRecentActivity :many
 SELECT 
   s.id as submission_id,
   s.mentee_id,
-  u.name as mentee_name,
+  COALESCE(u.name, users.email) as mentee_name,
   s.solution_url,
   s.status as submission_status,
   s.submitted_at,
   q.title as question_title,
   t.id as task_id
 FROM submissions s
-JOIN user_profiles u ON s.mentee_id = u.user_id
+JOIN users ON s.mentee_id = users.id
+LEFT JOIN user_profiles u ON s.mentee_id = u.user_id
 JOIN assignment_tasks t ON s.assignment_task_id = t.id
 JOIN questions q ON t.question_id = q.id
 ORDER BY s.submitted_at DESC
@@ -122,7 +123,7 @@ type GetRecentActivityRow struct {
 	SubmissionID     pgtype.UUID          `json:"submission_id"`
 	MenteeID         pgtype.UUID          `json:"mentee_id"`
 	MenteeName       string               `json:"mentee_name"`
-	SolutionUrl      string               `json:"solution_url"`
+	SolutionUrl      *string              `json:"solution_url"`
 	SubmissionStatus NullSubmissionStatus `json:"submission_status"`
 	SubmittedAt      pgtype.Timestamptz   `json:"submitted_at"`
 	QuestionTitle    string               `json:"question_title"`
@@ -244,6 +245,7 @@ SELECT
 FROM submissions s
 JOIN assignment_tasks t ON t.id = s.assignment_task_id
 JOIN questions q ON q.id = t.question_id
+JOIN users ON s.mentee_id = users.id
 LEFT JOIN user_profiles p ON p.user_id = s.mentee_id
 LEFT JOIN mentor_feedbacks f ON f.submission_id = s.id
 WHERE t.assignment_id = $1
@@ -252,7 +254,7 @@ ORDER BY s.submitted_at DESC
 
 type SubmissionDetailRow struct {
 	SubmissionID     pgtype.UUID          `json:"submission_id"`
-	SolutionURL      string               `json:"solution_url"`
+	SolutionURL      *string              `json:"solution_url"`
 	SubmissionStatus NullSubmissionStatus `json:"submission_status"`
 	SubmittedAt      pgtype.Timestamptz   `json:"submitted_at"`
 	TaskID           pgtype.UUID          `json:"task_id"`

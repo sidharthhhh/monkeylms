@@ -68,8 +68,8 @@ export default function QuestionBank() {
 
     const handleCreateQuestion = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newTitle || !newDesc || !newTopic) {
-            toast.error("Please fill all required fields");
+        if (!newTitle) {
+            toast.error("Please fill the title");
             return;
         }
 
@@ -77,9 +77,9 @@ export default function QuestionBank() {
         try {
             const payload = {
                 title: newTitle,
-                content_markdown: newDesc,   // backend expects content_markdown, not description
-                topic: newTopic,
-                difficulty: newDifficulty,
+                content_markdown: "",   // Now optional
+                topic: "General",       // Default topic
+                difficulty: "medium",   // Default difficulty
                 external_link: newLink || undefined,
             };
 
@@ -93,8 +93,6 @@ export default function QuestionBank() {
 
             // Reset form
             setNewTitle("");
-            setNewDesc("");
-            setNewTopic("");
             setNewLink("");
 
             // Reload list
@@ -107,18 +105,18 @@ export default function QuestionBank() {
     };
 
     const getDifficultyColor = (diff: string) => {
-        switch (diff.toLowerCase()) {
+        switch (diff?.toLowerCase()) {
             case "easy": return "bg-primary/20 text-primary hover:bg-primary/30 border-primary/30";
             case "medium": return "bg-secondary/20 text-secondary hover:bg-secondary/30 border-secondary/30";
             case "hard": return "bg-destructive/20 text-destructive hover:bg-destructive/30 border-destructive/30";
-            default: return "";
+            default: return "bg-muted/20 text-muted-foreground border-muted/30";
         }
     };
 
     const filteredQuestions = questions.filter(
         (q) =>
             q.title.toLowerCase().includes(search.toLowerCase()) ||
-            q.topic.toLowerCase().includes(search.toLowerCase())
+            (q.topic && q.topic.toLowerCase().includes(search.toLowerCase()))
     );
 
     return (
@@ -136,7 +134,7 @@ export default function QuestionBank() {
                             Add Question
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] border-border/50 bg-background/95 backdrop-blur-xl">
+                    <DialogContent className="sm:max-w-[400px] border-border/50 bg-background/95 backdrop-blur-xl">
                         <DialogHeader>
                             <DialogTitle className="text-2xl">Add New Question</DialogTitle>
                             <DialogDescription>
@@ -149,29 +147,8 @@ export default function QuestionBank() {
                                 <Input id="title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required placeholder="e.g. Reverse Linked List" className="bg-background/50 border-border" />
                             </div>
                             <div className="space-y-2">
-                                <Label>Difficulty *</Label>
-                                <Select value={newDifficulty} onValueChange={(v: any) => setNewDifficulty(v)}>
-                                    <SelectTrigger className="bg-background/50 border-border">
-                                        <SelectValue placeholder="Select difficulty" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="easy">Easy</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="hard">Hard</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="topic">Topic / Category *</Label>
-                                <Input id="topic" value={newTopic} onChange={(e) => setNewTopic(e.target.value)} required placeholder="e.g. Arrays, Trees, Dynamic Programming" className="bg-background/50 border-border" />
-                            </div>
-                            <div className="space-y-2">
                                 <Label htmlFor="link">External Link (Optional)</Label>
                                 <Input id="link" value={newLink} onChange={(e) => setNewLink(e.target.value)} type="url" placeholder="e.g. LeetCode URL" className="bg-background/50 border-border" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="desc">Description *</Label>
-                                <Textarea id="desc" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} required placeholder="Detailed problem description or instructions..." className="bg-background/50 border-border min-h-[100px]" />
                             </div>
                             <div className="flex justify-end pt-4 gap-2">
                                 <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)} className="border-border/50">Cancel</Button>

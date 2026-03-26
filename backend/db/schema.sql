@@ -47,9 +47,9 @@ CREATE TABLE batch_mentees (
 CREATE TABLE questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,
-    content_markdown TEXT NOT NULL,
-    difficulty difficulty_level NOT NULL,
-    topic VARCHAR(100) NOT NULL,
+    content_markdown TEXT,
+    difficulty difficulty_level,
+    topic VARCHAR(100),
     external_link TEXT,
     created_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -90,7 +90,7 @@ CREATE TABLE submissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     assignment_task_id UUID NOT NULL REFERENCES assignment_tasks(id) ON DELETE CASCADE,
     mentee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    solution_url TEXT NOT NULL,
+    solution_url TEXT,
     status submission_status DEFAULT 'submitted',
     submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

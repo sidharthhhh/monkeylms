@@ -36,14 +36,15 @@ WHERE submission_id = $1 LIMIT 1;
 SELECT 
   s.id as submission_id,
   s.mentee_id,
-  u.name as mentee_name,
+  COALESCE(u.name, users.email) as mentee_name,
   s.solution_url,
   s.status as submission_status,
   s.submitted_at,
   q.title as question_title,
   t.id as task_id
 FROM submissions s
-JOIN user_profiles u ON s.mentee_id = u.user_id
+JOIN users ON s.mentee_id = users.id
+LEFT JOIN user_profiles u ON s.mentee_id = u.user_id
 JOIN assignment_tasks t ON s.assignment_task_id = t.id
 JOIN questions q ON t.question_id = q.id
 ORDER BY s.submitted_at DESC

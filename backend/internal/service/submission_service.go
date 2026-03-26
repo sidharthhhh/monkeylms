@@ -54,11 +54,16 @@ func (s *submissionService) CreateSubmission(ctx context.Context, req domain.Cre
 		},
 	})
 
+	solutionURL := ""
+	if submission.SolutionUrl != nil {
+		solutionURL = *submission.SolutionUrl
+	}
+
 	return &domain.SubmissionResponse{
 		ID:               submission.ID,
 		AssignmentTaskID: submission.AssignmentTaskID,
 		MenteeID:         submission.MenteeID,
-		SolutionURL:      submission.SolutionUrl,
+		SolutionURL:      solutionURL,
 		Status:           string(submission.Status.SubmissionStatus),
 		SubmittedAt:      submission.SubmittedAt.Time,
 	}, nil
@@ -77,11 +82,15 @@ func (s *submissionService) GetSubmissionsForTask(ctx context.Context, taskID st
 
 	res := make([]domain.SubmissionResponse, 0, len(submissions))
 	for _, sub := range submissions {
+		url := ""
+		if sub.SolutionUrl != nil {
+			url = *sub.SolutionUrl
+		}
 		res = append(res, domain.SubmissionResponse{
 			ID:               sub.ID,
 			AssignmentTaskID: sub.AssignmentTaskID,
 			MenteeID:         sub.MenteeID,
-			SolutionURL:      sub.SolutionUrl,
+			SolutionURL:      url,
 			Status:           string(sub.Status.SubmissionStatus),
 			SubmittedAt:      sub.SubmittedAt.Time,
 		})
@@ -181,9 +190,13 @@ func (s *submissionService) GetSubmissionsByAssignment(ctx context.Context, assi
 
 	res := make([]domain.SubmissionDetailResponse, 0, len(rows))
 	for _, r := range rows {
+		url := ""
+		if r.SolutionURL != nil {
+			url = *r.SolutionURL
+		}
 		res = append(res, domain.SubmissionDetailResponse{
 			SubmissionID:     uuidStr(r.SubmissionID),
-			SolutionURL:      r.SolutionURL,
+			SolutionURL:      url,
 			Status:           string(r.SubmissionStatus.SubmissionStatus),
 			SubmittedAt:      r.SubmittedAt.Time.Format(time.RFC3339),
 			TaskID:           uuidStr(r.TaskID),
@@ -216,8 +229,8 @@ func (s *submissionService) GetRecentActivity(ctx context.Context, limit int32) 
 		submissionStr := fmt.Sprintf("%08x-%04x-%04x-%04x-%012x", submissionBytes[0:4], submissionBytes[4:6], submissionBytes[6:8], submissionBytes[8:10], submissionBytes[10:16])
 
 		url := ""
-		if a.SolutionUrl != "" {
-			url = a.SolutionUrl
+		if a.SolutionUrl != nil {
+			url = *a.SolutionUrl
 		}
 
 		res = append(res, domain.RecentActivityItem{
